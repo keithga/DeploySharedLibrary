@@ -26,7 +26,7 @@ function New-MDTDeploymentShare
         [parameter(mandatory=$true,HelpMessage="Location of Template Deployment Share.")]
         [string] $SourcePath,   # Example: c:\DeploymentTemplate
 
-        [string[]] $CopyDirectories = "scripts","tools","winpe.x86","winpe.x64", "`$OEM`$" 
+        [string[]] $CopyDirectories = @("scripts","tools","winpe.x86","winpe.x64", "`$OEM`$" )
 
     )
 

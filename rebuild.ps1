@@ -63,9 +63,8 @@ param(
 
 if (`$Verbose) { `$VerbosePreference = 'Continue' }
 
-`$LibImportPaths = @( "$( $ImportDirectories -join '", "' )" ) 
-
-Get-ChildItem -Path `$LibImportPaths -Filter '*.ps1' -exclude '*.tests.ps1' | 
+@( "$( $ImportDirectories -join '", "' )" )  | 
+    ForEach-Object { get-childitem -path "`$_\*.ps1" -exclude *.tests.ps1 } |
     ForEach-Object {
         Write-Verbose "Importing function `$(`$_.FullName)"
         . `$_.FullName | Out-Null
