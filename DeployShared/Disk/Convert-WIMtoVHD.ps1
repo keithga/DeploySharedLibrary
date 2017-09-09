@@ -84,7 +84,15 @@ function Convert-WIMtoVHD
 
     ########################################################
 
-    foreach ( $Package in $Packages ) {
+    $DotNet3Pkg = $null
+    if ( $DotNet3 ) {
+        write-verbose "Install .net Framework 3"
+        $DotNet3Pkg = "$OSSrcPath\sources\sxs\microsoft-windows-netfx3-ondemand-package.cab"
+    }
+
+    ########################################################
+
+    foreach ( $Package in $DotNet3Pkg,$Packages ) {
         $LogArgs = Get-NewDismArgs
         write-verbose "Add PAckages $Package"
 
@@ -105,24 +113,6 @@ function Convert-WIMtoVHD
         invoke-dism @LogArgs -ArgumentList "/Cleanup-image /image:$ApplyPath\ /analyzecomponentstore"
         invoke-dism @LogArgs -ArgumentList "/Cleanup-Image /image:$ApplyPath\ /StartComponentCleanup /ResetBase"
         invoke-dism @LogArgs -ArgumentList "/Cleanup-image /image:$ApplyPath\ /analyzecomponentstore"
-    }
-
-    ########################################################
-
-    if ( $DotNet3 ) {
-        write-verbose "Install .net Framework 3"
-
-        foreach ( $Package in "$OSSrcPath\sources\sxs\microsoft-windows-netfx3-ondemand-package.cab" ) {
-            $LogArgs = Get-NewDismArgs
-            if ( $Turbo ) {
-                $Command = " /image:$ApplyPath\ /Add-Package ""/PackagePath:$Package"""
-                invoke-dism @LogArgs -ArgumentList $Command
-            }
-            else {
-                Add-WindowsPackage -PackagePath $Package -Path "$ApplyPath\" @LogArgs -NoRestart | Out-String | Write-Verbose
-            }
-        }
-
     }
 
     ########################################################
