@@ -1,5 +1,12 @@
-function set-VMBiosGuid ( $VM, $GUID )
-{
+function set-VMBiosGuid {
+
+    [cmdletbinding()]
+    param ( 
+        [parameter(Mandatory=$true,ValueFromPipeline=$true)]
+        $VM, 
+        [parameter(Mandatory=$true)]
+        [string] $GUID 
+    )
 
     if ( $vm -is [Microsoft.HyperV.PowerShell.VirtualMachine] ) {
         $newVM = $vm

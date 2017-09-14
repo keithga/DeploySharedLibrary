@@ -11,13 +11,20 @@ Copyright Keith Garner, Deployment Live.
     param
     (
         [parameter(Mandatory=$true)]
-        [string] $ISOFile,
+        [string] $ImagePath,
         [parameter(Mandatory=$true)]
         [string] $VHDFile,
-        [parameter(Mandatory=$true)]
+        [parameter(Mandatory=$true,ParameterSetName="Index")]
         [int]    $Index,
+        [parameter(Mandatory=$true,ParameterSetName="Name")]
+        [string] $Name,
         [int]    $Generation = 1,
         [uint64]  $SizeBytes = 120GB,
+
+        [scriptblock] $AdditionalContent,
+        $AdditionalContentArgs,
+
+        [switch] $Turbo = $true,
         [switch] $Force
     )
 

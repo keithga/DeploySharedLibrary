@@ -6,7 +6,7 @@ function Format-NewDisk {
     * Do not use "Recovery Partitions" since they are no longer used for Windows 10.
     * This function will return a hash table of the WinRE, Windows, and System partitions.
     * System and WinRE are hard coded to 350MB
-    * call Format-NewDiskFinalize to make WinRE and System Partitions hidden.
+    * call Complete-NewDisk to make WinRE and System Partitions hidden.
     * Note: Set-Partition -GPTType *Not* present on 2012R2, use Diskpart (boo)
 
     #>

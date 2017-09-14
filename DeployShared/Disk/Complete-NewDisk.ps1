@@ -1,11 +1,13 @@
 
-Function Format-NewDiskFinalize {
+Function Complete-NewDisk {
     <# 
-    Finalize partitions for Windows 10
+    Complete New Disk partitions for Windows 10
 
-    Powershell will remove all drive letters from a disk if you hide *any* partition
-    Powershell will remove all drive letters from a disk if you mark the system partition 
-    # Note: Set-Partition -GPTType *Not* present on 2012R2, use Diskpart (boo)
+    Formatting a disk using Powershell Native commands have limitations:
+
+    * Powershell will remove all drive letters from a disk once you hide *any* partition
+    * Powershell will remove all drive letters from a disk once you mark the system partition
+    * Set-Partition -GPTType is *Not* present on 2012R2, use Diskpart
 
     #>
     [cmdletbinding()]

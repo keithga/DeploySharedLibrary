@@ -14,12 +14,10 @@ function Convert-WIMtoVHD
         [string] $Name,
         [int]    $Generation = 1,
         [uint64]  $SizeBytes = 120GB,
-        [string[]] $Packages,
-        [switch] $DotNet3,
-        [string[]] $Features,
+
+        [switch] $Persistent,
+
         [switch] $Turbo = $true,
-        [scriptblock] $AdditionalContent,
-        $Aux,
         [switch] $Force
     )
 
@@ -84,58 +82,10 @@ function Convert-WIMtoVHD
 
     ########################################################
 
-    $DotNet3Pkg = $null
-    if ( $DotNet3 ) {
-        write-verbose "Install .net Framework 3"
-        $DotNet3Pkg = "$OSSrcPath\sources\sxs\microsoft-windows-netfx3-ondemand-package.cab"
-    }
-
-    ########################################################
-
-    foreach ( $Package in $DotNet3Pkg,$Packages ) {
-        $LogArgs = Get-NewDismArgs
-        write-verbose "Add PAckages $Package"
-
-        if ( $Turbo ) {
-            $Command = " /image:$ApplyPath\ /Add-Package ""/PackagePath:$Package"""
-            invoke-dism @LogArgs -ArgumentList $Command
-        }
-        else {
-            Add-WindowsPackage -PackagePath $Package -Path "$ApplyPath\" @LogArgs -NoRestart | Out-String | Write-Verbose
-        }
-    }
-
-    ########################################################
-
-    if ( $cleanup )  {
-        $LogArgs = Get-NewDismArgs
-        write-verbose "Cleanup Image"
-        invoke-dism @LogArgs -ArgumentList "/Cleanup-image /image:$ApplyPath\ /analyzecomponentstore"
-        invoke-dism @LogArgs -ArgumentList "/Cleanup-Image /image:$ApplyPath\ /StartComponentCleanup /ResetBase"
-        invoke-dism @LogArgs -ArgumentList "/Cleanup-image /image:$ApplyPath\ /analyzecomponentstore"
-    }
-
-    ########################################################
-
-    foreach ( $Feature in $Features ) {
-        $LogArgs = Get-NewDismArgs
-        write-verbose "Add Feature $Feature"
-
-        if ( $Turbo ) {
-            $Command = " /image:$ApplyPath\ /Enable-Feature /All ""/FeatureName:$Feature"" ""/Source:$OSSrcPath"""
-            invoke-dism @LogArgs -ArgumentList $Command
-        }
-        else {
-            Enable-WindowsOptionalFeature -FeatureName $Feature -all -LimitAccess -path $ApplyPath -Source $OSSrcPath @DISMArgs
-        }
-    }
-
-    ########################################################
-
     if ( $AdditionalContent )
     {
-        write-verbose "Additional Content here!   param( $ApplyPath, $srcOSPath, $Aux ) "
-        Invoke-Command -ScriptBlock $AdditionalContent -ArgumentList $ApplyPath, (split-path (split-path $ImagePath)), $aux
+        write-verbose "Additional Content here!   param( $ApplyPath, $srcOSPath, $AdditionalContentArgs ) "
+        Invoke-Command -ScriptBlock $AdditionalContent -ArgumentList $ApplyPath, (split-path (split-path $ImagePath)), $AdditionalContentArgs
     }
 
     ########################################################
@@ -167,11 +117,13 @@ function Convert-WIMtoVHD
     }
 
     Write-Verbose "Finalize Disk"
-    Format-NewDiskFinalize @ReadyDisk
+    Complete-NewDisk @ReadyDisk
 
-    write-verbose "Convert-WIMtoVHD FInished"
+    if ( -not $Persistent ) {
+        write-verbose "Convert-WIMtoVHD FInished"
+        Dismount-VHD -Path $VhdFile
 
-    Dismount-VHD -Path $VhdFile
+    }
 
 }
 
