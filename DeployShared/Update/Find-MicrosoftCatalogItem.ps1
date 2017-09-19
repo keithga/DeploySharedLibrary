@@ -14,16 +14,12 @@ function Find-MicrosoftCatalogItem {
     .LINK
     https://support.microsoft.com/en-us/help/4000823
 
-    .PARAMETER Build
-    Windows 10 Build Number used to filter avaible Downloads
+    .PARAMETER SearchTerm
 
-        10240 - Windows 10 Version 1507 
-        10586 - Windows 10 Version 1511 
-        14393 - Windows 10 Version 1607 and Windows Server 2016
-        15063 - Windows 10 Version 1703
-
+    Search term used to query Windows Update, same as found here https://www.catalog.update.microsoft.com/Home.aspx
+    
     .PARAMETER Filter
-    Specify a specific search filter to change the target update behaviour. The default will only Cumulative updates for x86 and x64.
+    Specify a specific search filter to change the target update behaviour. 
 
     If Mulitple Filters are specified, only string that match *ALL* filters will be selected.
 
@@ -32,22 +28,26 @@ function Find-MicrosoftCatalogItem {
         x86 - Download x86
         x64 - Download x64
 
+    .PARAMETER Exclude
+
+    Same as Filter, except used to exclude content 
+
     .EXAMPLE
-    Get the latest Cumulative Update for Windows 10 x86
+    Get the Sept 2017 Updates for Windows 10 x86
 
-    .\Get-LatestUpdate.ps1 -Filter 'Cumulative','x86'
-
-    .EXAMPLE
-
-    Get the latest Cumulative Update for Windows Server 2016
-
-    .\Get-LatestUpdate.ps1 -Filter 'Cumulative','x64' -Build 14393
+    Find-MicrosoftCatalogItem -$SearchTerm 'windows 10 1703 2017 09 update x64' -exclude 'delta'
 
     .EXAMPLE
 
-    Get the latest Cumulative Updates for Windows 10 (both x86 and x64) and download to the %TEMP% directory.
+    Get the latest Cumulative Updates for Windows 10
 
-    .\Get-LatestUpdate.ps1 | Start-BitsTransfer -Destination $env:Temp
+    Find-LatestCumulativeUpdate | % { 'KB' + $_.articleID } | Find-MicrosoftCatalogItem -exclude delta
+
+    .EXAMPLE
+
+    Get the latest Cumulative Updates for Windows 10 (x64) and download to the %TEMP% directory.
+
+    Find-MicrosoftCatalogItem 'Adobe Flash x64 10 1703' | select-object -first 1 | Start-BitsTransfer -Destination $env:Temp
 
     #>
 
