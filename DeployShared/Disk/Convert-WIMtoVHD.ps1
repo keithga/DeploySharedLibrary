@@ -16,6 +16,8 @@ function Convert-WIMtoVHD
         [uint64]  $SizeBytes = 120GB,
 
         [switch] $Persistent,
+        [scriptblock] $AdditionalContent,
+        $AdditionalContentArgs,
 
         [switch] $Turbo = $true,
         [switch] $Force
@@ -54,12 +56,10 @@ function Convert-WIMtoVHD
     $StdArgs = $PSBoundParameters | get-HashTableSubset -include ImagePath,Index,Name
     $StdArgs | Out-String | Write-verbose
 
-    $LogArgs = Get-NewDismArgs
     write-verbose "Get WIM image information for $ImagePath"
     get-windowsimage -ImagePath $ImagePath | out-string | write-verbose
     Get-WindowsImage -ImagePath $ImagePath | %{ Get-WindowsImage -ImagePath $ImagePath -index $_.ImageIndex } | write-verbose
         
-    $LogArgs = Get-NewDismArgs
     write-verbose "Expand-WindowsImage Path [$ApplyPath]"
     if ( $Turbo )
     {
@@ -67,11 +67,12 @@ function Convert-WIMtoVHD
 
         $Command = "/Apply-Image ""/ImageFile:$ImagePath"" ""/ApplyDir:$ApplyPath"""
         if ( $Name ) { $Command = $Command + " ""/Name:$Name""" } else { $Command = $Command + " /Index:$Index" }
-        invoke-dism @LogArgs -ArgumentList $Command
+        invoke-dism -description 'Dism-ApplyIMage' -ArgumentList $Command
 
     }
     else
     {
+        $LogArgs = Get-NewDismArgs
         Expand-WindowsImage -ApplyPath "$ApplyPath\" @StdArgs @LogArgs | Out-String | Write-Verbose
     }
 
@@ -84,8 +85,8 @@ function Convert-WIMtoVHD
 
     if ( $AdditionalContent )
     {
-        write-verbose "Additional Content here!   param( $ApplyPath, $srcOSPath, $AdditionalContentArgs ) "
-        Invoke-Command -ScriptBlock $AdditionalContent -ArgumentList $ApplyPath, (split-path (split-path $ImagePath)), $AdditionalContentArgs
+        write-verbose "Additional Content here!   param( $ApplyPath, $OSSrcPath, $AdditionalContentArgs ) "
+        Invoke-Command -ScriptBlock $AdditionalContent -ArgumentList $ApplyPath, $OSSrcPath, $AdditionalContentArgs
     }
 
     ########################################################
@@ -102,9 +103,8 @@ function Convert-WIMtoVHD
     }
 
     # http://www.codeease.com/create-a-windows-to-go-usb-drive-without-running-windows-8.html
-    Copy-Item $ApplyPath\Windows\System32\bcdboot.exe $env:temp\BCDBoot.exe
-
-    start-CommandHidden -FilePath $env:temp\BCDBoot.exe -ArgumentList $BCDBootArgs | write-verbose
+    cmd.exe /c "copy $ApplyPath\Windows\System32\bcdboot.exe $env:temp" | Out-String | write-verbose
+    start-CommandHidden -FilePath "$env:temp\BCDBoot.exe" -ArgumentList $BCDBootArgs | write-verbose
 
     start-sleep 5
     if ( $Generation -eq 1)

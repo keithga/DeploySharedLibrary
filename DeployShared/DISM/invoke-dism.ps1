@@ -12,16 +12,19 @@ $result = Invoke-Dism -ArgumentList "/capture-image /imagefile:c:\users\keith.ga
 #>
     [cmdletbinding()]
     param (
-        [string] $ArgumentList,
         [switch] $NoNewWindow,
         [string] $WorkingDirectory = '.',
         [string] $LogPath,
+        [string] $Description = 'Dism',
         [int]    $LogLevel = 3,
-        [system.diagnostics.ProcessWindowStyle] $WindowStyle = [system.diagnostics.ProcessWindowStyle]::Hidden
+        [system.diagnostics.ProcessWindowStyle] $WindowStyle = [system.diagnostics.ProcessWindowStyle]::Hidden,
+        [Parameter(Mandatory = $true,ValueFromRemainingArguments=$true)] 
+        [string[]] $ArgumentList
     )
 
     function Format-LogData {
         param ( 
+            [string] $Description = 'dism',
             [string] $LogFile,
             [ref] $index
         )
@@ -31,7 +34,7 @@ $result = Invoke-Dism -ArgumentList "/capture-image /imagefile:c:\users\keith.ga
         if ( $logData ) {
             while ( $index.Value -lt $logdata.count ) {
                 if ( $logData[$index.Value] -match "(100|\d?\d)\.?\d?\%" ) {
-                    write-progress DISM -ID 1 -PercentComplete $Matches[1]
+                    write-progress $Description -ID 1 -PercentComplete $Matches[1]
                     $ShowBlanks = $false
                 }
                 elseif ( ( $logData[$index.Value].length -gt 0 ) -or $ShowBlanks ) {
@@ -47,7 +50,7 @@ $result = Invoke-Dism -ArgumentList "/capture-image /imagefile:c:\users\keith.ga
     }
 
     if ( -not $LogPath ) {
-        $LogPath = [IO.Path]::GetTempFileName() + ".dism.log"
+        $LogPath = [IO.Path]::GetTempFileName() + ".$($Description).log"
     }
 
     $ProcessArgs = @{
@@ -70,11 +73,11 @@ $result = Invoke-Dism -ArgumentList "/capture-image /imagefile:c:\users\keith.ga
 
     [int]$i = 0
     while (!$DismRun.HasExited) {
-        Format-LogData -index ([ref]$i) -LogFile $ProcessArgs.RedirectStandardOutput | write-verbose
+        Format-LogData -index ([ref]$i) -LogFile $ProcessArgs.RedirectStandardOutput -Description $Description | write-verbose
         start-sleep -Milliseconds 200
     }
-    Format-LogData -i ([ref]$i) -LogFile $ProcessArgs.RedirectStandardOutput | write-verbose
-    write-progress DISM -id $DismRun.ID -Completed
+    Format-LogData -i ([ref]$i) -LogFile $ProcessArgs.RedirectStandardOutput  -Description $Description | write-verbose
+    write-progress  $Description -id $DismRun.ID -Completed
 
     write-verbose "Flush Errors"
     get-content $ProcessArgs.RedirectStandardError | write-verbose
@@ -82,7 +85,7 @@ $result = Invoke-Dism -ArgumentList "/capture-image /imagefile:c:\users\keith.ga
     $exitcode = Get-ExitCodeProcess -Handle $handle
 
     if ( $exitcode -gt 0 ) {
-        get-content $ProcessArgs.RedirectStandardOutput | select-object -last 20 | write-Error
+        get-content $ProcessArgs.RedirectStandardOutput | select-object -last 20 | write-warning
     }
 
     Write-Verbose "Cleanup"

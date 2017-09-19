@@ -1,5 +1,5 @@
 
-function Update-OfflineImgage {
+function Update-OfflineImage {
     [cmdletbinding()]
     param(
         [string] $ApplyPath,
@@ -26,12 +26,11 @@ function Update-OfflineImgage {
     ########################################################
 
     foreach ( $Package in $DotNet3Pkg,$Packages ) {
-        $LogArgs = Get-NewDismArgs
         write-verbose "Add PAckages $Package"
 
         if ( $Turbo ) {
             $Command = " /image:$ApplyPath\ /Add-Package ""/PackagePath:$Package"""
-            invoke-dism @LogArgs -ArgumentList $Command
+            invoke-dism -description 'Dism-AddPackage' -ArgumentList $Command
         }
         else {
             Add-WindowsPackage -PackagePath $Package -Path "$ApplyPath\" @LogArgs -NoRestart | Out-String | Write-Verbose
@@ -41,11 +40,15 @@ function Update-OfflineImgage {
     ########################################################
 
     if ( $cleanup )  {
-        $LogArgs = Get-NewDismArgs
         write-verbose "Cleanup Image"
-        invoke-dism @LogArgs -ArgumentList "/Cleanup-image /image:$ApplyPath\ /analyzecomponentstore"
-        invoke-dism @LogArgs -ArgumentList "/Cleanup-Image /image:$ApplyPath\ /StartComponentCleanup /ResetBase"
-        invoke-dism @LogArgs -ArgumentList "/Cleanup-image /image:$ApplyPath\ /analyzecomponentstore"
+        invoke-dism -description 'Dism-CleanupAnalyze' -ArgumentList "/Cleanup-image /image:$ApplyPath\ /analyzecomponentstore"
+        if ( Test-Path "$ApplyPath\Windows\System32\pending.xml" ) {
+            invoke-dism -description 'Dism-CleanupBase' -ArgumentList "/Cleanup-Image /image:$ApplyPath\ /StartComponentCleanup"
+        }
+        else {
+            invoke-dism -description 'Dism-CleanupBase' -ArgumentList "/Cleanup-Image /image:$ApplyPath\ /StartComponentCleanup /ResetBase"
+        }
+        invoke-dism -description 'Dism-CleanupAnalyze' -ArgumentList "/Cleanup-image /image:$ApplyPath\ /analyzecomponentstore"
     }
 
     ########################################################
@@ -55,8 +58,8 @@ function Update-OfflineImgage {
         write-verbose "Add Feature $Feature"
 
         if ( $Turbo ) {
-            $Command = " /image:$ApplyPath\ /Enable-Feature /All ""/FeatureName:$Feature"" ""/Source:$OSSrcPath"""
-            invoke-dism @LogArgs -ArgumentList $Command
+            $Command = " /image:$ApplyPath\ /Enable-Feature /All ""/FeatureName:$Feature"" ""/Source:$OSSrcPath"" /LimitAccess"
+            invoke-dism -description 'Dism-AddFeature-$Feature' -ArgumentList $Command
         }
         else {
             Enable-WindowsOptionalFeature -FeatureName $Feature -all -LimitAccess -path $ApplyPath -Source $OSSrcPath @DISMArgs
@@ -67,8 +70,8 @@ function Update-OfflineImgage {
 
     if ( $AdditionalContent )
     {
-        write-verbose "Additional Content here!   param( $ApplyPath, $srcOSPath, $AdditionalContentArgs ) "
-        Invoke-Command -ScriptBlock $AdditionalContent -ArgumentList $ApplyPath, (split-path (split-path $ImagePath)), $AdditionalContentArgs
+        write-verbose "Additional Content here!   param( $ApplyPath, $OSSrcpath, $AdditionalContentArgs ) "
+        Invoke-Command -ScriptBlock $AdditionalContent -ArgumentList $ApplyPath, $OSSrcPath, $AdditionalContentArgs
     }
 
 }

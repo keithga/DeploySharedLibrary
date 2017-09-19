@@ -55,7 +55,7 @@ function Convert-VHDtoWIM
     if ( Test-Path "C:\Program Files\Microsoft Deployment Toolkit\Templates\Wimscript.ini") { 
         $Commmand = $Command + " ""/ConfigFile:C:\Program Files\Microsoft Deployment Toolkit\Templates\Wimscript.ini"""
     }
-    invoke-dism @LogArgs -ArgumentList $Command
+    invoke-dism -description 'Dism-CaptureImage' -ArgumentList $Command
 
     ####################################################
 

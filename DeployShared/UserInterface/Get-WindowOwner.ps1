@@ -1,6 +1,5 @@
 
-function Get-WindowOwner
-{
+function Get-WindowOwner {
 <#
  .SYNOPSIS
 Get the Window Owner
