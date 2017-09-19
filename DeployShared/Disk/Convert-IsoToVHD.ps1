@@ -28,21 +28,21 @@ Copyright Keith Garner, Deployment Live.
         [switch] $Force
     )
 
-    if ( -not ( Test-Path $ISOFile ) ) { throw "missing ISOFile: $ISOFile" }
+    if ( -not ( Test-Path $ImagePath ) ) { throw "missing ISOFile: $ImagePath" }
 
     $OKToDismount= $False
-    $FoundVolume = get-diskimage -ImagePath $ISOFile -ErrorAction SilentlyContinue | Get-Volume
+    $FoundVolume = get-diskimage -ImagePath $ImagePath -ErrorAction SilentlyContinue | Get-Volume
     if ( -not $FoundVolume )
     {
-        Mount-DiskImage -ImagePath $ISOFile -StorageType ISO -Access ReadOnly
+        Mount-DiskImage -ImagePath $ImagePath -StorageType ISO -Access ReadOnly
         start-sleep -Milliseconds 250
-        $FoundVolume = get-diskimage -ImagePath $ISOFile -ErrorAction SilentlyContinue | Get-Volume
+        $FoundVolume = get-diskimage -ImagePath $ImagePath -ErrorAction SilentlyContinue | Get-Volume
         $OKToDismount= $True
     }
 
     if ( -not $FoundVolume )
     {
-        throw "Missing ISO: $ISOfile"
+        throw "Missing ISO: $ImagePath"
     }
 
     $FoundVolume | Out-String | Write-Verbose
@@ -51,12 +51,12 @@ Copyright Keith Garner, Deployment Live.
     if ( -not $DriveLetter ) {throw "DriveLetter not found after mounting" }
     if ( -not ( Test-Path "$DriveLetter\Sources\Install.wim" ) ) { throw "Windows Install.wim not found" }
 
-    $StdArgs = $PSBoundParameters | get-HashTableSubset -exclude ISOFile
+    $StdArgs = $PSBoundParameters | get-HashTableSubset -exclude ImagePath
     Convert-WIMtoVHD -ImagePath "$DriveLetter\Sources\Install.wim" @StdArgs | Out-Default
 
     if ( $OKToDismount )
     {
-        Dismount-DiskImage -ImagePath $ISOFile | out-string
+        Dismount-DiskImage -ImagePath $ImagePath | out-string
     }
 
 }
