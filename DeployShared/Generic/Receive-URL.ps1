@@ -24,7 +24,7 @@ Function Receive-URL
 
         This method should be faster than Invoke-WebRequest ( https://github.com/PowerShell/PowerShell/issues/2138 )
     #> 
-
+    [cmdletbinding()]
     param(
         [Parameter(Mandatory=$true)]
         [String] $url,
@@ -33,7 +33,7 @@ Function Receive-URL
     )
     
     begin {
-	    $client = New-Object System.Net.WebClient
+        $client = New-Object System.Net.WebClient
         $Global:downloadComplete = $false
 
         $eventDataComplete = Register-ObjectEvent $client DownloadFileCompleted -SourceIdentifier WebClient.DownloadFileComplete -Action {$Global:downloadComplete = $true}
