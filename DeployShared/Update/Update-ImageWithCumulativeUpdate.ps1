@@ -8,7 +8,7 @@ function Update-ImageWithCumulativeUpdate {
         [string] $Cache,
         [parameter(Mandatory=$true)]
         [string] $Target,
-        [string] $Force
+        [switch] $Force
     )
 
     #region Support Routines

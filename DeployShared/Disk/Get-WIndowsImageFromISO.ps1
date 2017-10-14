@@ -4,6 +4,7 @@ function Get-WIndowsImageFromISO {
     Get some info from the ISO image and return.
 
 #>
+[cmdletbinding()]
 param(
     [parameter(Mandatory=$true)]
     [string] $ImagePath,
