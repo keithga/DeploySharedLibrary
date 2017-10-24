@@ -44,11 +44,9 @@ function New-HyperVirtualMachine
     }
 
     if ( -not $SwitchName ) {
-        if ( Get-VMSwitch -SwitchType External -ErrorAction SilentlyContinue ) {
-            if ( (Get-VMSwitch -SwitchType External -ErrorAction SilentlyContinue | Measure-Object).Count -eq 1 ) {
-                $SwitchName = Get-VMSwitch -SwitchType External | Select-Object -ExpandProperty Name
-            }
-        }
+        $SwitchName = Get-VMSwitch -SwitchType External -ErrorAction SilentlyContinue |
+            Where-Object AllowManagementOS -eq $True | 
+            Select-Object -First 1 -ExpandProperty Name
     }
     if ( -not $SwitchName ) { throw "Missing Switch!" }
 
