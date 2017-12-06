@@ -8,6 +8,7 @@ Will mount the ISO image (if not already mounted)
 .NOTES
 Copyright Keith Garner, Deployment Live.
 #>
+    [cmdletbinding()]
     param
     (
         [parameter(Mandatory=$true)]

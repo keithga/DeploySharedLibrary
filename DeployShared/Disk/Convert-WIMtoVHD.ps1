@@ -116,9 +116,6 @@ function Convert-WIMtoVHD
         if ( -not ( test-path "$ApplySys\EFI\Microsoft\Boot\memtest.efi" ) ) { write-warning "missing $ApplySys\EFI\Microsoft\Boot\memtest.efi" }
     }
 
-    Write-Verbose "Finalize Disk"
-    Complete-NewDisk @ReadyDisk
-
     if ( -not $Persistent ) {
         write-verbose "Convert-WIMtoVHD FInished"
         Dismount-VHD -Path $VhdFile
