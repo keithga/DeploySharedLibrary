@@ -24,7 +24,7 @@ function Get-MSIProperties ( $Path )
     }
     $FullPath = (get-item $Path).FullName
 
-    write-host "Open: $FullPath"
+    write-Verbose "Open: $FullPath"
     $WindowsInstaller = New-Object -com WindowsInstaller.Installer
     $MSIDatabase = $WindowsInstaller.GetType().InvokeMember("OpenDatabase","InvokeMethod",$Null,$WindowsInstaller,@($FullPath,0))
     if ( $MSIDatabase )
@@ -33,8 +33,10 @@ function Get-MSIProperties ( $Path )
         $View.GetType().InvokeMember("Execute", "InvokeMethod", $null, $View, $null) | out-null
         while($Record = $View.GetType().InvokeMember("Fetch","InvokeMethod",$null,$View,$null)) 
         {
-            @{ $Record.GetType().InvokeMember("StringData","GetProperty",$null,$Record,1) = 
-                $Record.GetType().InvokeMember("StringData","GetProperty",$null,$Record,2)}
+            [pscustomobject] @{ 
+                $Record.GetType().InvokeMember("StringData","GetProperty",$null,$Record,1) = 
+                $Record.GetType().InvokeMember("StringData","GetProperty",$null,$Record,2)
+            } | Write-Output
         }
         $View.GetType().InvokeMember("Close","InvokeMethod",$null,$View,$null) | out-null
     }
