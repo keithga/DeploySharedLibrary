@@ -20,7 +20,7 @@ param(
 
         $ImageDetail = Get-WindowsImageFromISO $Image.fullname |
             where-object { $_ -is [Microsoft.Dism.Commands.WimImageInfoObject] } | 
-            Select-object ImageIndex,EditionID,ImageName,Architecture,Version,ModifiedTime,Languages
+            Select-object ImageIndex,EditionID,ImageName,Architecture,Version,ModifiedTime,Languages,ProductType
 
         if ( $ImageDetail.count -gt 1 ){
             $result = $ImageDetail | Out-GridView -OutputMode Single 

@@ -20,12 +20,12 @@ function Update-OfflineImage {
     $DotNet3Pkg = $null
     if ( $DotNet3 ) {
         write-verbose "Install .net Framework 3"
-        $DotNet3Pkg = "$OSSrcPath\sources\sxs\microsoft-windows-netfx3-ondemand-package.cab"
+        $DotNet3Pkg += get-childitem "$OSSrcPath\sources\sxs\*netfx3*" | % FullName
     }
 
     ########################################################
 
-    foreach ( $Package in $DotNet3Pkg,$Packages ) {
+    foreach ( $Package in $DotNet3Pkg + $Packages ) {
         write-verbose "Add PAckages $Package"
 
         if ( $Turbo ) {

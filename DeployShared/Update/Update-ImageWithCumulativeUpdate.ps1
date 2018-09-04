@@ -8,7 +8,7 @@ function Update-ImageWithCumulativeUpdate {
         [string] $Cache,
         [parameter(Mandatory=$true)]
         [string] $Target,
-        [string] $Force
+        [switch] $Force
     )
 
     #region Support Routines
@@ -89,9 +89,11 @@ function Update-ImageWithCumulativeUpdate {
         #############################################
         write-verbose "Get the status of the update and patch the WIM"
 
-        if ( ( -not ( 'true' -in $PackageCache.New ) ) -and ( $Config.EditionId -notin $Force ) ) { write-verbose "no changes to $($Config.ISO)"; continue }
-
         $TargetName = @( $Config.EditionID,(Get-Architecture $Config.Architecture),$Config.Version,(Get-Date -f 'yyMM')) -join '.'
+
+        if ( ( -not ( 'true' -in $PackageCache.New ) ) -and ( $Config.EditionId -notin $Force ) -and ( test-path ( join-path $Target "$($TargetName).wim" ) ) ) { 
+            write-verbose "no changes to $($Config.ISO)"; continue
+        }
 
         $ConvertVHDArgs = @{
             ImagePath = $COnfig.ISO
@@ -118,6 +120,8 @@ function Update-ImageWithCumulativeUpdate {
         }
 
         Convert-VHDtoWIM @ConvertWIMArgs
+
+        #endregion
 
     }
 
