@@ -33,7 +33,7 @@ function Format-NewDisk {
         if ($GPT) {
             initialize-disk -Number $DiskID -PartitionStyle GPT -Confirm:$true
             # It's possible the MSR partition was created during Initialize-Disk
-            $MSRPartition = get-partition -DiskNumber 2 -PartitionNumber 1 | where GPTType -eq '{e3c9e316-0b5c-4db8-817d-f92df00215ae}'
+            $MSRPartition = get-partition -DiskNumber $DiskID -erroraction SilentlyContinue | where GPTType -eq '{e3c9e316-0b5c-4db8-817d-f92df00215ae}'
         }
         else {
             initialize-disk -Number $DiskID -PartitionStyle MBR -Confirm:$true

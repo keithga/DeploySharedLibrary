@@ -18,6 +18,7 @@ https://github.com/keithga/DeployShared
 
 
 Function copy-ItemWithProgress(
+    [cmdletbinding()]
     [Parameter(Mandatory = $true,ValueFromRemainingArguments=$true)] 
     [string[]] $RobocopyArgs
 )
@@ -83,6 +84,7 @@ With inspiration by Trevor Sullivan @pcgeek86
         $LogData | write-Error
         throw "Robocopy $ScanLog $($ScanRun.ExitCode)"
     }
+    start-sleep 1
     $FileSize = [regex]::Match($LogData[-4],".+:\s+(\d+)\s+(\d+)").Groups[2].Value
     write-verbose ("Robocopy Bytes: $FileSize `n" +($LogData -join "`n"))
 

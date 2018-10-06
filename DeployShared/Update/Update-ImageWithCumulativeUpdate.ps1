@@ -8,6 +8,7 @@ function Update-ImageWithCumulativeUpdate {
         [string] $Cache,
         [parameter(Mandatory=$true)]
         [string] $Target,
+        [string[]] $CUPreReq,
         [switch] $Force
     )
 
@@ -55,18 +56,27 @@ function Update-ImageWithCumulativeUpdate {
         $config | out-string -width 200 | write-verbose 
         $Build = $Config.Version -as [version]
         $LocalCache = @( $Config.EditionID,(Get-Architecture $Config.Architecture),$Config.Version) -join '.'
-        $PackageCache = @()
+        $PackageCache = @( )
+
+        $PackageCache += $CUPreReq | %{ [pscustomobject] @{ New = $false; Path = $_ } }
         $LocalCache | write-verbose
 
         #region Get latest CU
         #############################################
-        write-verbose "Get the latest Cumulative Update for $($Config.ISO)"
+        if ( $CUForce ) {
+            $PackageCache += $CUForce | %{ [pscustomobject] @{ New = $false; Path = $_ } }
 
-        $PackageCache += Find-LatestCumulativeUpdate -BUild $BUild.Build | 
-            ForEach-Object { "KB$($_.ArticleID) " + (Get-Architecture $Config.Architecture) } | 
-            Find-MicrosoftCatalogItem -Exclude 'delta' |
-            Select-Object -unique -first 1 | 
-            Update-DownloadLink -Cache "$Cache\$LocalCache\CU"
+        }
+        else {
+            write-verbose "Get the latest Cumulative Update for $($Config.ISO)"
+
+            $PackageCache += Find-LatestCumulativeUpdate -BUild $BUild.Build | 
+                ForEach-Object { "KB$($_.ArticleID) " + (Get-Architecture $Config.Architecture) } | 
+                Find-MicrosoftCatalogItem -Exclude 'delta' |
+                Select-Object -unique -first 1 | 
+                Update-DownloadLink -Cache "$Cache\$LocalCache\CU"
+
+        }
 
         #endregion
 
@@ -102,7 +112,7 @@ function Update-ImageWithCumulativeUpdate {
             AdditionalContentArgs = $PackageCache.path
             AdditionalContent = {
                 param( $ApplyPath, $OSSrcPath, $Update )
-                update-offlineimage -ApplyPath $ApplyPath -OSSrcPath $OSSrcPath -dotnet3 -cleanup -packages $Update
+                update-offlineimage -ApplyPath $ApplyPath -OSSrcPath $OSSrcPath -cleanup -packages $Update 
             }
         }
 
@@ -124,6 +134,5 @@ function Update-ImageWithCumulativeUpdate {
         #endregion
 
     }
-
 
 }

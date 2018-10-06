@@ -23,6 +23,7 @@ function Find-LatestCumulativeUpdate {
         15063 - Windows 10 Version 1703
         16299 - Windows 10 Version 1709
         17134 - Windows 10 Version 1803
+        17663 - Windows 10 Version 1809 and Windows Server 2019
 
     .EXAMPLE
     Get the latest Cumulative Update for Windows 10 x64
@@ -50,8 +51,8 @@ function Find-LatestCumulativeUpdate {
         [string] $StartKB = 'https://support.microsoft.com/app/content/api/content/asset/en-us/4000816',
 
         [Parameter(Mandatory=$False, HelpMessage="Windows build number.")]
-        [ValidateSet('17134','16299','15063','14393','10586','10240')]
-        [string] $BUild = '17134'
+        [ValidateSet('17763','17134','16299','15063','14393','10586','10240')]
+        [string] $Build = '17763'
 
     )
 
