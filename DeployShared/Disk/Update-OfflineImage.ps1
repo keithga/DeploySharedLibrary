@@ -41,7 +41,8 @@ function Update-OfflineImage {
 
     if ( $cleanup )  {
         write-verbose "Cleanup Image"
-        dism.exe /Cleanup-image "/image:$ApplyPath\" /analyzecomponentstore
+        invoke-dism -description 'Cleanup-image' -argumentList "/Cleanup-image /image:$ApplyPath\ /analyzecomponentstore"
+        #dism.exe /Cleanup-image "/image:$ApplyPath\" /analyzecomponentstore
         if ( Test-Path "$ApplyPath\Windows\System32\pending.xml" ) {
             invoke-dism -description 'Dism-CleanupBase' -ArgumentList "/Cleanup-Image /image:$ApplyPath\ /StartComponentCleanup"
         }
@@ -51,7 +52,8 @@ function Update-OfflineImage {
                 invoke-dism -description 'Dism-CleanupBase' -ArgumentList "/Cleanup-Image /image:$ApplyPath\ /StartComponentCleanup"
             }
         }
-        dism.exe /Cleanup-image "/image:$ApplyPath\" /analyzecomponentstore
+        invoke-dism -description 'Cleanup-image' -argumentList "/Cleanup-image /image:$ApplyPath\ /analyzecomponentstore"
+        # dism.exe /Cleanup-image "/image:$ApplyPath\" /analyzecomponentstore
     }
 
     ########################################################

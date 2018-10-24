@@ -41,7 +41,7 @@ function Find-MicrosoftCatalogItem {
 
     Get the latest Cumulative Updates for Windows 10
 
-    Find-LatestCumulativeUpdate | % { 'KB' + $_.articleID } | Find-MicrosoftCatalogItem -exclude delta
+    Find-LatestCumulativeUpdate | % { $_.KB } | Find-MicrosoftCatalogItem -exclude '(delta|arm64)'
 
     .EXAMPLE
 
@@ -75,21 +75,23 @@ function Find-MicrosoftCatalogItem {
 
     $kbGUIDs = $kbObj.Links | 
         Where-Object ID -match '_link' |
-        Where-Object { $_.OuterHTML -match ( "(?=.*" + ( $Filter -join ")(?=.*" ) + ")" ) } |
-        Where-Object { -not $exclude -or -not ( $_.OuterHTML -match ( "(?=.*" + ( $Exclude -join ")(?=.*" ) + ")" ) ) } |
+        Where-Object { $_.OuterHTML -match $filter } |
+        Where-Object { -not $exclude -or -not ( $_.OuterHTML -match $exclude ) } |
         ForEach-Object { $_.id.replace('_link','') } |
         Where-Object { $_ -in $Available_KBIDs }
 
+    $links = @()
     foreach ( $kbGUID in $kbGUIDs )
     {
         Write-Verbose "`t`tDownload $kbGUID"
         $Post = @{ size = 0; updateID = $kbGUID; uidInfo = $kbGUID } | ConvertTo-Json -Compress
         $PostBody = @{ updateIDs = "[$Post]" } 
-        Invoke-WebRequest -Uri 'http://www.catalog.update.microsoft.com/DownloadDialog.aspx' -Method Post -Body $postBody |
+        $Links += Invoke-WebRequest -Uri 'http://www.catalog.update.microsoft.com/DownloadDialog.aspx' -Method Post -Body $postBody |
             Select-Object -ExpandProperty Content |
             Select-String -AllMatches -Pattern "(http[s]?\://download\.windowsupdate\.com\/[^\'\""]*)" | 
-            Select-Object -Unique |
-            ForEach-Object { [PSCustomObject] @{ Source = $_.matches.value } }  # Output for BITS
+            ForEach-Object { $_.matches.value }
     }
+
+    $Links | Select-Object -Unique | ForEach-Object { [PSCustomObject] @{ Source = $_ } } | Write-Output
 
 }

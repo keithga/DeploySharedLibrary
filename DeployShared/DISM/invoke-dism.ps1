@@ -26,6 +26,7 @@ $result = Invoke-Dism -ArgumentList "/capture-image /imagefile:c:\users\keith.ga
         param ( 
             [string] $Description = 'dism',
             [string] $LogFile,
+            [int] $ID = 1,
             [ref] $index
         )
 
@@ -34,7 +35,7 @@ $result = Invoke-Dism -ArgumentList "/capture-image /imagefile:c:\users\keith.ga
         if ( $logData ) {
             while ( $index.Value -lt $logdata.count ) {
                 if ( $logData[$index.Value] -match "(100|\d?\d)\.?\d?\%" ) {
-                    write-progress $Description -ID 1 -PercentComplete $Matches[1]
+                    write-progress $Description -ID $ID -PercentComplete $Matches[1]
                     $ShowBlanks = $false
                 }
                 elseif ( ( $logData[$index.Value].length -gt 0 ) -or $ShowBlanks ) {
@@ -73,10 +74,10 @@ $result = Invoke-Dism -ArgumentList "/capture-image /imagefile:c:\users\keith.ga
 
     [int]$i = 0
     while (!$DismRun.HasExited) {
-        Format-LogData -index ([ref]$i) -LogFile $ProcessArgs.RedirectStandardOutput -Description $Description | write-verbose
+        Format-LogData -index ([ref]$i) -LogFile $ProcessArgs.RedirectStandardOutput -Description $Description -ID $DismRun.ID | write-verbose
         start-sleep -Milliseconds 200
     }
-    Format-LogData -i ([ref]$i) -LogFile $ProcessArgs.RedirectStandardOutput  -Description $Description | write-verbose
+    Format-LogData -index ([ref]$i) -LogFile $ProcessArgs.RedirectStandardOutput  -Description $Description | write-verbose
     write-progress  $Description -id $DismRun.ID -Completed
 
     write-verbose "Flush Errors"

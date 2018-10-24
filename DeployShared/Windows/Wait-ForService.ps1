@@ -56,7 +56,3 @@ function Wait-ForService
     }
 }
 
-
-# stop-service WinRM -PassThru | Wait-ForService -status stopped
-# start-service WinRM -PassThru | Wait-ForService -status Running 
-# stop-service WinRM -PassThru | Wait-ForService -status stopped

@@ -12,19 +12,20 @@ param(
     [string] $Name
 )
 
+    $fullImagePath = get-item -Path $ImagePath | % FullName
 
-    if ( -not ( Test-Path $ImagePath ) ) { throw "missing ISOFile: $ImagePath" }
+    if ( -not ( Test-Path $FullImagePath ) ) { throw "missing ISOFile: $FullImagePath" }
 
     $OKToDismount= $False
-    $FoundVolume = get-diskimage -ImagePath $ImagePath -ErrorAction SilentlyContinue | Get-Volume
+    $FoundVolume = get-diskimage -ImagePath $FullImagePath -ErrorAction SilentlyContinue | Get-Volume
     if ( -not $FoundVolume ) {
-        Mount-DiskImage -ImagePath $ImagePath -StorageType ISO -Access ReadOnly
+        Mount-DiskImage -ImagePath $FullImagePath -StorageType ISO -Access ReadOnly
         start-sleep -Milliseconds 250
-        $FoundVolume = get-diskimage -ImagePath $ImagePath -ErrorAction SilentlyContinue | Get-Volume
+        $FoundVolume = get-diskimage -ImagePath $FullImagePath -ErrorAction SilentlyContinue | Get-Volume
         $OKToDismount= $True
     }
 
-    if ( -not $FoundVolume ) { throw "Missing ISO: $ImagePath" }
+    if ( -not $FoundVolume ) { throw "Missing ISO: $FullImagePath" }
 
     $FoundVolume | Out-String | Write-Verbose
     $DriveLetter =  $FoundVolume | %{ "$($_.DriveLetter)`:" }
@@ -47,7 +48,7 @@ param(
     ###################
     
     if ( $OKToDismount ) {
-        Dismount-DiskImage -ImagePath $ImagePath | out-string
+        Dismount-DiskImage -ImagePath $FullImagePath | out-string
     }
 
 

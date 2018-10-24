@@ -17,13 +17,13 @@ function Find-LatestCumulativeUpdate {
     .PARAMETER Build
     Windows 10 Build Number used to filter avaible Downloads
 
-        10240 - Windows 10 Version 1507 
-        10586 - Windows 10 Version 1511 
+        # 10240 - Windows 10 Version 1507 
+        # 10586 - Windows 10 Version 1511 
         14393 - Windows 10 Version 1607 and Windows Server 2016
-        15063 - Windows 10 Version 1703
+        # 15063 - Windows 10 Version 1703
         16299 - Windows 10 Version 1709
         17134 - Windows 10 Version 1803
-        17663 - Windows 10 Version 1809 and Windows Server 2019
+        17763 - Windows 10 Version 1809 and Windows Server 2019
 
     .EXAMPLE
     Get the latest Cumulative Update for Windows 10 x64
@@ -47,53 +47,21 @@ function Find-LatestCumulativeUpdate {
 
     [CmdletBinding()]
     Param(
-        [Parameter(Mandatory=$False, HelpMessage="JSON source for the update KB articles.")]
-        [string] $StartKB = 'https://support.microsoft.com/app/content/api/content/asset/en-us/4000816',
-
         [Parameter(Mandatory=$False, HelpMessage="Windows build number.")]
-        [ValidateSet('17763','17134','16299','15063','14393','10586','10240')]
+        [ValidateSet('17763','17134','16299','14393')]
         [string] $Build = '17763'
 
     )
 
-    #region Support Routine
-
-    Function Select-LatestUpdate {
-        [CmdletBinding(SupportsShouldProcess=$True)]
-        Param(
-            [Parameter(Mandatory=$true, ValueFromPipeline=$true)]
-            $Updates
-        )
-        Begin { 
-            $MaxObject = $null
-            $MaxValue = [version]::new("0.0")
-        }
-        Process {
-            ForEach ( $Update in $updates ) {
-                Select-String -InputObject $Update -AllMatches -Pattern "(\d+\.)?(\d+\.)?(\d+\.)?(\*|\d+)" |
-                ForEach-Object { $_.matches.value } |
-                ForEach-Object { $_ -as [version] } |
-                ForEach-Object { 
-                    if ( $_ -gt $MaxValue ) { $MaxObject = $Update; $MaxValue = $_ }
-                }
-            }
-        }
-        End { 
-            $MaxObject | Write-Output 
-        }
-    }
-
-    #endregion
-
-    Write-Verbose "Downloading $StartKB to retrieve the list of updates."
-
-    Invoke-WebRequest -Uri $StartKB |
-        Select-Object -ExpandProperty Content |
-        ConvertFrom-Json |
-        Select-Object -ExpandProperty Links |
-        Where-Object level -eq 2 |
-        Where-Object text -match $BUild |
-        Select-LatestUpdate |
-        Select-Object -First 1 
+    '4464619','4099479','4043454','4000825' | 
+        %{ iwr "https://support.microsoft.com/en-us/help/$_" } | 
+        % Content | 
+        select-string '"([^\-\"]*)—(KB[0-9]*) \(OS Build ([0-9\.]*)\)"' -AllMatches | 
+        % { $_.Matches } | 
+        % { [pscustomobject]@{ Date = [datetime]$_.Groups[1].Value ; KB = $_.Groups[2].Value ; Build = [version]('10.0.' + $_.Groups[3].Value) } } |
+        % { write-verbose $_ ; $_ } | 
+        ? { $_.Build.Build -eq $Build } |
+        sort -Property Date |
+        select -last 1
 
 }
