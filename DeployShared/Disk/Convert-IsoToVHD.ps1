@@ -19,6 +19,8 @@ Copyright Keith Garner, Deployment Live.
         [int]    $Index,
         [parameter(Mandatory=$true,ParameterSetName="Name")]
         [string] $Name,
+        [parameter(Mandatory=$true,ParameterSetName="Like")]
+        [string] $Like,
         [int]    $Generation = 1,
         [uint64]  $SizeBytes = 120GB,
 

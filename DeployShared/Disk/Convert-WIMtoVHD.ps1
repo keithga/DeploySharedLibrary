@@ -12,6 +12,8 @@ function Convert-WIMtoVHD
         [int]    $Index,
         [parameter(Mandatory=$true,ParameterSetName="Name")]
         [string] $Name,
+        [parameter(Mandatory=$true,ParameterSetName="Like")]
+        [string] $Like,
         [int]    $Generation = 1,
         [uint64]  $SizeBytes = 120GB,
 
@@ -31,6 +33,34 @@ function Convert-WIMtoVHD
         dismount-vhd $VHDFile -ErrorAction SilentlyContinue | out-null
         remove-item -Force -Path $VHDFile | out-null
     }
+
+    ########################################################
+
+    write-verbose "Get WIM image information for $ImagePath"
+    $images = get-windowsimage -ImagePath $ImagePath 
+    $Images | out-string | write-verbose
+    Get-WindowsImage -ImagePath $ImagePath | %{ Get-WindowsImage -ImagePath $ImagePath -index $_.ImageIndex } | write-verbose
+
+    if ( $Images.count -eq 1 ) {
+        $Index = 1  # easy
+    }
+    elseif ( $name ) {
+        $index = $images | Where-Object { $_.ImageName -eq $Name } | % { $_.ImageIndex }
+        if ( -not $Index ) { throw "Image Index $Name not found" }
+    }
+    else {
+        $index = $Images | Where-Object { $_.ImageName -like $Like } | % { $_.ImageIndex }
+        if ( -not $Index ) { throw "Image Index $Like not found" }
+    }
+
+    $ImageData = Get-WindowsImage -ImagePath $ImagePath -index $Index 
+    $ImageData | Out-String | Write-Verbose
+
+    if ( $ImageData.Architecture -eq 'x86' ) {
+        $Generation = 1  # Hyper-V does not support x86 with UEFI        
+    }
+    
+    ########################################################
 
     New-VHD -Path $VHDFile -SizeBytes $SizeBytes | Out-String | write-verbose
 
@@ -52,13 +82,6 @@ function Convert-WIMtoVHD
     write-verbose "Expand-WindowsImage Path [$ApplyPath] and System: [$ApplySys]"
 
     ########################################################
-
-    $StdArgs = $PSBoundParameters | get-HashTableSubset -include ImagePath,Index,Name
-    $StdArgs | Out-String | Write-verbose
-
-    write-verbose "Get WIM image information for $ImagePath"
-    get-windowsimage -ImagePath $ImagePath | out-string | write-verbose
-    Get-WindowsImage -ImagePath $ImagePath | %{ Get-WindowsImage -ImagePath $ImagePath -index $_.ImageIndex } | write-verbose
         
     write-verbose "Expand-WindowsImage Path [$ApplyPath]"
     if ( $Turbo )
@@ -66,14 +89,14 @@ function Convert-WIMtoVHD
         write-Verbose "Apply Windows Image /ImageFile:$ImagePath /ApplyDir:$ApplyPath"
 
         $Command = "/Apply-Image ""/ImageFile:$ImagePath"" ""/ApplyDir:$ApplyPath"""
-        if ( $Name ) { $Command = $Command + " ""/Name:$Name""" } else { $Command = $Command + " /Index:$Index" }
+        $Command = $Command + " /Index:$Index"
         invoke-dism -description 'Dism-ApplyIMage' -ArgumentList $Command
 
     }
     else
     {
         $LogArgs = Get-NewDismArgs
-        Expand-WindowsImage -ApplyPath "$ApplyPath\" @StdArgs @LogArgs | Out-String | Write-Verbose
+        Expand-WindowsImage -ApplyPath "$ApplyPath\" -ImagePath $ImagePath -Inded $index @LogArgs | Out-String | Write-Verbose
     }
 
     ########################################################
