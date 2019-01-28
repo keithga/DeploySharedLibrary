@@ -116,7 +116,10 @@ function Convert-WIMtoVHD
 
     Write-Verbose "$ApplyPath\Windows\System32\bcdboot.exe $ApplyPath\Windows /s $ApplySys /v"
 
-    if ( $Generation -eq 1)
+    if ( get-item H:\Windows\System32\bcdboot.exe | ? { [version]$_.VersionInfo.productversion -lt [version]'10.0.0.0' } ) {
+        $BCDBootArgs = "$ApplyPath\Windows","/s","$ApplySys","/v"
+    }    
+    elseif ( $Generation -eq 1)
     {
         $BCDBootArgs = "$ApplyPath\Windows","/s","$ApplySys","/v","/F","BIOS"
     }
