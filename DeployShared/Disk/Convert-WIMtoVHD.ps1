@@ -39,10 +39,13 @@ function Convert-WIMtoVHD
     write-verbose "Get WIM image information for $ImagePath"
     $images = get-windowsimage -ImagePath $ImagePath 
     $Images | out-string | write-verbose
-    Get-WindowsImage -ImagePath $ImagePath | %{ Get-WindowsImage -ImagePath $ImagePath -index $_.ImageIndex } | write-verbose
+    # $Images | %{ Get-WindowsImage -ImagePath $ImagePath -index $_.ImageIndex } | write-verbose
 
     if ( $Images.count -eq 1 ) {
         $Index = 1  # easy
+    }
+    elseif ( $index ) {
+
     }
     elseif ( $name ) {
         $index = $images | Where-Object { $_.ImageName -eq $Name } | % { $_.ImageIndex }
@@ -116,7 +119,7 @@ function Convert-WIMtoVHD
 
     Write-Verbose "$ApplyPath\Windows\System32\bcdboot.exe $ApplyPath\Windows /s $ApplySys /v"
 
-    if ( get-item H:\Windows\System32\bcdboot.exe | ? { [version]$_.VersionInfo.productversion -lt [version]'10.0.0.0' } ) {
+    if ( get-item $ApplyPath\Windows\System32\bcdboot.exe | ? { [version]$_.VersionInfo.productversion -lt [version]'10.0.0.0' } ) {
         $BCDBootArgs = "$ApplyPath\Windows","/s","$ApplySys","/v"
     }    
     elseif ( $Generation -eq 1)
