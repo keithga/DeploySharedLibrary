@@ -135,6 +135,18 @@ function Convert-WIMtoVHD
     cmd.exe /c "copy $ApplyPath\Windows\System32\bcdboot.exe $env:temp" | Out-String | write-verbose
     start-CommandHidden -FilePath "$env:temp\BCDBoot.exe" -ArgumentList $BCDBootArgs | write-verbose
 
+    if ( -not ( ( Test-Path "$ApplySys\EFI\Microsoft\Boot\BCD" ) -or ( Test-Path "$ApplySys\Boot\BCD"  ) ) ) {
+        Write-Verbose "Failed to apply... re-run using local bcdboot version"
+        if ( $Generation -eq 1) {
+            $BCDBootArgs = "$ApplyPath\Windows","/s","$ApplySys","/v","/F","BIOS"
+        }
+        else {
+            $BCDBootArgs = "$ApplyPath\Windows","/s","$ApplySys","/v","/F","UEFI"
+        }
+        start-CommandHidden -FilePath "BCDBoot.exe" -ArgumentList $BCDBootArgs | write-verbose
+
+    }
+
     start-sleep 5
     if ( $Generation -eq 1)
     {
