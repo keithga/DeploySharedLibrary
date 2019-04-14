@@ -24,6 +24,7 @@ function Find-LatestCumulativeUpdate {
         16299 - Windows 10 Version 1709
         17134 - Windows 10 Version 1803
         17763 - Windows 10 Version 1809 and Windows Server 2019
+        18362 - Windows 10 Version 1903
 
     .EXAMPLE
     Get the latest Cumulative Update for Windows 10 x64
@@ -48,7 +49,7 @@ function Find-LatestCumulativeUpdate {
     [CmdletBinding()]
     Param(
         [Parameter(Mandatory=$False, HelpMessage="Windows build number.")]
-        [ValidateSet('17763','17134','16299','14393')]
+        [ValidateSet('17763','17134','16299','14393','18362')]
         [string] $Build = '17763'
 
     )
@@ -56,7 +57,7 @@ function Find-LatestCumulativeUpdate {
     '4464619','4099479','4043454','4000825' | 
         %{ iwr "https://support.microsoft.com/en-us/help/$_" } | 
         % Content | 
-        select-string '"([^\-\"]*)—(KB[0-9]*) \(OS Build ([0-9\.]*)\)"' -AllMatches | 
+        select-string '"([^\-\"]*)\p{Pd}(KB[0-9]*) \(OS Build ([0-9\.]*)\)"' -AllMatches | 
         % { $_.Matches } | 
         % { [pscustomobject]@{ Date = [datetime]$_.Groups[1].Value ; KB = $_.Groups[2].Value ; Build = [version]('10.0.' + $_.Groups[3].Value) } } |
         % { write-verbose $_ ; $_ } | 

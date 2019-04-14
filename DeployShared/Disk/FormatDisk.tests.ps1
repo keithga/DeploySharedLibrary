@@ -46,6 +46,17 @@ describe 'New disk MBR' {
 }
 
 
+describe 'cleanup environment' {
+
+    dismount-vhd -Path $VHDPath 
+    get-disk -path $VHDPath -ErrorAction SilentlyContinue | should Throw
+
+}
+
+
+return
+
+
 describe 'New disk GPT' {
 
     write-host "Disk: $($newDisk.DiskNumber)"
