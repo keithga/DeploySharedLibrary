@@ -39,10 +39,13 @@ function Convert-WIMtoVHD
     write-verbose "Get WIM image information for $ImagePath"
     $images = get-windowsimage -ImagePath $ImagePath 
     $Images | out-string | write-verbose
-    Get-WindowsImage -ImagePath $ImagePath | %{ Get-WindowsImage -ImagePath $ImagePath -index $_.ImageIndex } | write-verbose
+    # $Images | %{ Get-WindowsImage -ImagePath $ImagePath -index $_.ImageIndex } | write-verbose
 
     if ( $Images.count -eq 1 ) {
         $Index = 1  # easy
+    }
+    elseif ( $index ) {
+
     }
     elseif ( $name ) {
         $index = $images | Where-Object { $_.ImageName -eq $Name } | % { $_.ImageIndex }
@@ -116,7 +119,7 @@ function Convert-WIMtoVHD
 
     Write-Verbose "$ApplyPath\Windows\System32\bcdboot.exe $ApplyPath\Windows /s $ApplySys /v"
 
-    if ( get-item H:\Windows\System32\bcdboot.exe | ? { [version]$_.VersionInfo.productversion -lt [version]'10.0.0.0' } ) {
+    if ( get-item $ApplyPath\Windows\System32\bcdboot.exe | ? { [version]$_.VersionInfo.productversion -lt [version]'10.0.0.0' } ) {
         $BCDBootArgs = "$ApplyPath\Windows","/s","$ApplySys","/v"
     }    
     elseif ( $Generation -eq 1)
@@ -131,6 +134,18 @@ function Convert-WIMtoVHD
     # http://www.codeease.com/create-a-windows-to-go-usb-drive-without-running-windows-8.html
     cmd.exe /c "copy $ApplyPath\Windows\System32\bcdboot.exe $env:temp" | Out-String | write-verbose
     start-CommandHidden -FilePath "$env:temp\BCDBoot.exe" -ArgumentList $BCDBootArgs | write-verbose
+
+    if ( -not ( ( Test-Path "$ApplySys\EFI\Microsoft\Boot\BCD" ) -or ( Test-Path "$ApplySys\Boot\BCD"  ) ) ) {
+        Write-Verbose "Failed to apply... re-run using local bcdboot version"
+        if ( $Generation -eq 1) {
+            $BCDBootArgs = "$ApplyPath\Windows","/s","$ApplySys","/v","/F","BIOS"
+        }
+        else {
+            $BCDBootArgs = "$ApplyPath\Windows","/s","$ApplySys","/v","/F","UEFI"
+        }
+        start-CommandHidden -FilePath "BCDBoot.exe" -ArgumentList $BCDBootArgs | write-verbose
+
+    }
 
     start-sleep 5
     if ( $Generation -eq 1)

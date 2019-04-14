@@ -8,6 +8,7 @@ Function Complete-NewDisk {
     * Powershell will remove all drive letters from a disk once you hide *any* partition
     * Powershell will remove all drive letters from a disk once you mark the system partition
     * Set-Partition -GPTType is *Not* present on 2012R2, use Diskpart
+    * Set-partition -isHidden can affect other partitions not just the one selected!?!?
 
     #>
     [cmdletbinding()]
@@ -23,7 +24,10 @@ Function Complete-NewDisk {
     if ($WinREPartition) {
         $WinREPartition | 
             where-object MBRType -eq 7 |
-            Set-Partition -IsHidden:$True
+            ForEach-Object { 
+                Invoke-DiskPart -Commands @("list disk","Select Disk $($_.diskNumber)","Select Partition $($_.PartitionNumber)","set ID=27","Detail Part","Exit" ) | write-verbose
+            }
+            # Set-Partition -IsHidden:$True
     }
 
     if ( $SystemPartition ) {
