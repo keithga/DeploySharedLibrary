@@ -55,7 +55,7 @@ function Find-LatestCumulativeUpdate {
 
     )
 
-    '4464619','4099479','4043454','4000825' | 
+    '4529964','4498140','4464619','4099479','4043454','4000825' | 
         %{ iwr "https://support.microsoft.com/en-us/help/$_" } | 
         % Content | 
         select-string '"([^\-\"]*)\p{Pd}(KB[0-9]*) \(OS Build ([0-9\.]*)\)"' -AllMatches | 
