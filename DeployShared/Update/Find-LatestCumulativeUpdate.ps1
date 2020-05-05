@@ -25,6 +25,7 @@ function Find-LatestCumulativeUpdate {
         17134 - Windows 10 Version 1803
         17763 - Windows 10 Version 1809 and Windows Server 2019
         18362 - Windows 10 Version 1903
+        18363 - Windows 10 Version 1909
 
     .EXAMPLE
     Get the latest Cumulative Update for Windows 10 x64
@@ -49,7 +50,7 @@ function Find-LatestCumulativeUpdate {
     [CmdletBinding()]
     Param(
         [Parameter(Mandatory=$False, HelpMessage="Windows build number.")]
-        [ValidateSet('17763','17134','16299','14393','18362')]
+        [ValidateSet('17763','17134','16299','14393','18362','18363')]
         [string] $Build = '17763'
 
     )
