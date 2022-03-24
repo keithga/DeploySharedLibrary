@@ -84,11 +84,9 @@ function Find-MicrosoftCatalogItem {
     foreach ( $kbGUID in $kbGUIDs )
     {
         Write-Verbose "`t`tDownload $kbGUID"
-        $Post = @{ size = 0; updateID = $kbGUID; uidInfo = $kbGUID } | ConvertTo-Json -Compress
-        $PostBody = @{ updateIDs = "[$Post]" } 
-        $Links += Invoke-WebRequest -Uri 'http://www.catalog.update.microsoft.com/DownloadDialog.aspx' -Method Post -Body $postBody |
-            Select-Object -ExpandProperty Content |
-            Select-String -AllMatches -Pattern "(http[s]?\://download\.windowsupdate\.com\/[^\'\""]*)" | 
+        $Uri = "https://www.catalog.update.microsoft.com/DownloadDialog.aspx?updateIDs=[{%22uidInfo%22:%22$kbGUID%22,%22updateID%22:%22$kbGUID%22,%22size%22:0}]"
+		
+		$Links += Invoke-WebRequest -Uri $Uri | Select-8Object -ExpandProperty Content| Select-String -AllMatches -Pattern "(http[s]?\://download\.windowsupdate\.com\/[^\'\""]*)" | 
             ForEach-Object { $_.matches.value }
     }
 
